@@ -3,17 +3,24 @@
 
 import plotly.plotly as py
 from plotly.graph_objs import *
+from app import *
+
+title, origin_url, urls, count = setup('machine learning')
+output, link_score, keyw_score = rank_links(origin_url, urls, count)
+
+py.sign_in("ryin", "dyg27kojki")
+
 
 trace1 = Bar(
-    x=[1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012],
-    y=[219, 146, 112, 127, 124, 180, 236, 207, 236, 263, 350, 430, 474, 526, 488, 537, 500, 439],
-    name='Rest of world',
+    x=[x[0] for x in output],
+    y=link_score,
+    name='Link score',
     marker=Marker(color='rgb(55, 83, 109)'
     )
 )
 trace2 = Bar(
-    x=[1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012],
-    y=[16, 13, 10, 11, 28, 37, 43, 55, 56, 88, 105, 156, 270, 299, 340, 403, 549, 499],
+    x=[x[0] for x in output],
+    y=keyw_score,
     name='China',
     marker=Marker(
         color='rgb(26, 118, 255)'

@@ -6,6 +6,7 @@ import requests
 import itertools
 import code
 import wikipedia
+#import indicoio
 
 ##### SET UP URLS #####
 alchemyapi = AlchemyAPI()
@@ -38,6 +39,8 @@ def setup(query):
 def rank_links(origin_url, urls, count):
 	origin_keywords = [word['text'] for word in alchemyapi.keywords('url', origin_url)['keywords']]
 	output = []
+	link_lst = []
+	keyw_list = []
 	rank = dict()
 	for url in urls:
 		try:
@@ -53,21 +56,22 @@ def rank_links(origin_url, urls, count):
 			value = link_score + keyw_score
 			title = soup1.title.text[:-35]
 			summary = wikipedia.summary(title, sentences=1, auto_suggest=True)
-			rank[url] = (title, value, summary)
+			rank[url] = (title, value, summary, link_score, keyw_score, url)
 		except:
 			pass
 	sorted_rank = sorted(rank.values(), key=itemgetter(1), reverse=True)
-	c = 0
 	max_val = sorted_rank[0][1]
-	for i in sorted_rank[:10]:
-		output.append((i[0], i[1]/max_val, i[2]))
-	return (output, link_score, keyw_score)
+	for i in sorted_rank[:8]:
+		output.append((i[0], i[1]/max_val, i[2], i[5]))
+		link_lst.append(i[3])
+		keyw_list.append(i[4])
+	return output, link_lst, keyw_list
 
 #code.interact(local=locals())
 
 def main():
 	start=time.time()
-	origin_url, urls, count = setup('machine learning')
+	title, origin_url, urls, count = setup('machine learning')
 	print(rank_links(origin_url, urls, count)[0])
 	end=time.time()
 	print('time: {}'.format(end-start))

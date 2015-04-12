@@ -2,6 +2,7 @@ import math
 import eventBasedAnimation
 from app import *
 import code
+import webbrowser
 
 class Graph(object):
     def __init__(self, lst, x, y, r, centerTxt):
@@ -25,8 +26,10 @@ class Graph(object):
             y = self.y+linkLength*math.sin(self.angle*nodeIndex+math.radians(self.step))
             fillcolor = "black" if (nodeIndex%2==1) else "dark orange"
             txtcolor = "white" if (nodeIndex%2==1) else "black"
+
             message = lst[nodeIndex][2]
-            self.nodes.append(Node(x,y,r,lst[nodeIndex][0],fillcolor,txtcolor,message))
+            url = lst[nodeIndex][3]
+            self.nodes.append(Node(x,y,r,lst[nodeIndex][0],fillcolor,txtcolor,message,url))
 
     def rotate(self):
         self.step = (self.step + 1) % 360
@@ -37,6 +40,7 @@ class Graph(object):
             self.nodes[nodeIndex].x, self.nodes[nodeIndex].y = x, y
 
     def draw(self, canvas):
+        canvas.create_rectangle(0,0,1000,800,fill='lightblue')
         linkLength = 5*self.r
         for node in self.nodes:
             canvas.create_line(self.x,self.y,node.x,node.y)
@@ -46,21 +50,23 @@ class Graph(object):
 
 
 class Node(object):
-    def __init__(self, x, y, r, txt, fillcolor, txtcolor, message):
+    def __init__(self, x, y, r, txt, fillcolor, txtcolor, message, url):
         self.x, self.y, self.r = x, y, r
         self.txt = txt
         self.step = 0
         self.fillcolor = fillcolor
         self.txtcolor = txtcolor
         self.message = message
+        self.url = url
         self.box = False
 
     def clicked(self, x, y):
         if ((x-self.x)**2+(y-self.y)**2)**0.5 <= self.r:
-            pass
+            webbrowser.open(self.url)
             #fill this in once decided what todo
 
     def hover(self, x, y):
+        self.step=0
         if ((x-self.x)**2+(y-self.y)**2)**0.5 <= self.r:
             self.box = True
             return
@@ -68,22 +74,61 @@ class Node(object):
 
     def draw(self, canvas):
         canvas.create_oval(self.x-self.r,self.y-self.r,self.x+self.r,self.y+self.r,fill=self.fillcolor)
-        canvas.create_text(self.x,self.y,text=str(self.txt),fill=self.txtcolor)
+        approxCircleLen = 6
+        margin = 12
+        row = 0
+        titleList = (self.txt).split()
+        title = ""
+        for i in range(len(titleList)):
+            if i == len(titleList)-1:
+                if row >= 3:
+                    row -= 1
+                if row == 0:
+                    row = 0
+                title += titleList[i]
+                canvas.create_text(self.x,self.y+(row)*margin,text=str(title),fill=self.txtcolor)
+            elif len(title) + len(titleList[i]) < approxCircleLen:
+                title += titleList[i] + ' '
+            else:
+                title += titleList[i]
+                canvas.create_text(self.x,self.y+(row)*margin,text=str(title),fill=self.txtcolor)
+                row += 1
+                title = ""
         if self.box == True:
             boxWidth, boxHeight = 200, 80
             boxFont = "Arial 12 bold"
-            approxLen = 65
+            approxLen = 60
             margin = 25
+            counter=0
+            row=''
+            splitMessage=self.message.split()
             canvas.create_rectangle(self.x-boxWidth,self.y-boxHeight,self.x+boxWidth,self.y+boxHeight,fill="grey")
-            if (len(self.message) <= approxLen):
-                canvas.create_text(self.x,self.y,text=str(self.message),font=boxFont)
-            else:
-                for row in range(int(len(self.message)//approxLen)):
-                    if row == int(len(self.message)//approxLen):
-                        canvas.create_text(self.x,self.y+row*margin-60,text=str(self.message)[approxLen*row:],font=boxFont)
-                    else:
-                        canvas.create_text(self.x,self.y+row*margin-60,text=str(self.message)[0+approxLen*row:approxLen*(row+1)],font=boxFont)
-            code.interact(local=locals())
+            index = 0
+            for i in splitMessage:
+                if index==0:
+                    if len(self.message)/approxLen>=4:
+                        counter-=1
+                if index == len(splitMessage)-1:
+                    if counter==0:
+                        counter=1
+                    row += i 
+                    canvas.create_text(self.x,self.y+margin*(counter-1),text=row,font=boxFont)
+                    break
+                if len(row)+len(i)+1<approxLen:
+                    j = i + ' '
+                    row += j
+                else:
+                    row+=i+ ' '
+                    canvas.create_text(self.x,self.y+margin*(counter-1),text=row,font=boxFont)
+                    row=''
+                    counter+=1
+                index += 1
+                 #   if len(splitMessage)==0:
+                 #       canvas.create_text(self.x,self.y+counter*margin-60,font=row)
+                #        break
+                #counter+=1
+            
+            
 
 
 class Display(eventBasedAnimation.Animation):
@@ -91,7 +136,9 @@ class Display(eventBasedAnimation.Animation):
         pass
 
     def onMouse(self, event):
-        pass
+        for graph in self.graphs:
+            for node in graph.nodes:
+                node.clicked(event.x,event.y)
 
     def onMouseMove(self, event):
         for graph in self.graphs:
@@ -199,11 +246,12 @@ def drawStateTwo(canvas):
     
 
 def learning(canvas):
-    canvas.create_text(canvas.width/2, canvas.height/2, text="Hi, I am currently learning :)")
+    canvas.create_text(canvas.width/2, canvas.height/2, text="Hi, I am currently working :)")
 
 
 def redrawAll(canvas):
     canvas.delete(ALL)
+    #canvas.create_rectangle(-100,-100,1100,1100,fill='lightblue')
     font = ("Arial", 16, "bold")
     if canvas.condition==False:
         msg="Please Input Search, Press Return to View Relationships"
@@ -216,7 +264,7 @@ def init(canvas):
     canvas.boxes=[]
     canvas.condition=False
     canvas.width=1000
-    canvas.height=500
+    canvas.height=1000
     redrawAll(canvas)
     
 def run():
