@@ -71,7 +71,7 @@ def rank_links(origin_url, urls, count):
 
 def main():
 	start=time.time()
-	title, origin_url, urls, count = setup('machine learning')
+	title, origin_url, urls, count = setup('bush')
 	print(rank_links(origin_url, urls, count)[0])
 	end=time.time()
 	print('time: {}'.format(end-start))
